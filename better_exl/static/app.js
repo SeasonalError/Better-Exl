@@ -41,6 +41,33 @@ const S = {
 };
 const sheet = () => S.p?.sheets.find((s) => s.id === S.sid) || S.p?.sheets[0];
 const token = $("meta[name=api-token]").content;
+const WEB = Boolean(window.BetterExlWeb);
+const SAVED_LABEL = WEB ? "Saved in this browser" : "Saved on this computer";
+const icon = (name, size = 18) => window.labIcon(name, size);
+function setNavigation(action) {
+  $$(".primary-nav button").forEach((button) =>
+    button.classList.toggle("nav-active", button.dataset.action === action),
+  );
+}
+function renderIcons() {
+  $$("[data-icon]").forEach((el) => (el.innerHTML = icon(el.dataset.icon)));
+}
+function showEngine(detail) {
+  const box = $("#engine-state"),
+    message = $("#engine-message");
+  if (!box || !message) return;
+  box.classList.toggle("loading", detail.percent < 100 && !detail.error);
+  box.classList.toggle("failed", Boolean(detail.error));
+  message.textContent = detail.error
+    ? "Analysis unavailable · retry"
+    : detail.percent === 100
+      ? "Analysis tools ready"
+      : detail.message;
+  box.dataset.action = detail.error ? "retry-engine" : "storage";
+  box.title = detail.error
+    ? detail.message
+    : "Calculations run privately on your device.";
+}
 function toast(text, error = false) {
   const e = document.createElement("div");
   e.className = "toast" + (error ? " error" : "");
@@ -49,6 +76,7 @@ function toast(text, error = false) {
   setTimeout(() => e.remove(), error ? 10000 : 4500);
 }
 async function api(path, method = "GET", body) {
+  if (WEB) return window.BetterExlWeb.request(path, method, body);
   const r = await fetch(path, {
     method,
     headers: {
@@ -151,7 +179,7 @@ async function save() {
         S.p.version = r.version;
         S.p.updated = r.updated;
         if (!S.dirty) {
-          status("Saved on this computer");
+          status(SAVED_LABEL);
           localStorage.removeItem("better-exl-draft");
         }
       }
@@ -202,12 +230,13 @@ function sidebar() {
   $("#projects").innerHTML = S.projects
     .map(
       (p) =>
-        `<button class="project ${p.id === S.p?.id ? "active" : ""}" data-action="open" data-id="${p.id}"><span>▤</span>${esc(p.name)}</button>`,
+        `<button class="project ${p.id === S.p?.id ? "active" : ""}" data-action="open" data-id="${p.id}">${icon("flask", 16)}<span>${esc(p.name)}</span></button>`,
     )
     .join("");
 }
 async function openProject(id) {
   await save();
+  close();
   S.p = await api("/api/projects/" + id);
   S.sid = S.p.sheets[0].id;
   S.tab = "data";
@@ -239,19 +268,43 @@ async function create(body) {
   await analyze();
 }
 function home() {
-  document.title = "Better Exl · Your lab workspace";
-  $("#main").innerHTML =
-    `<header class="topbar"><div><div class="crumb">Your workspace</div><h1>Overview</h1></div><span class="tag">LOCAL · v1.0</span></header><div class="overview"><div class="intro"><div class="eyebrow">A LITTLE LESS SPREADSHEET. A LOT MORE SCIENCE.</div><h1>Let’s make sense of your measurements.</h1><p>Collect, calculate, compare. Everything stays with your experiment.</p></div><div class="starts"><button class="start" data-action="new"><span class="icon">+</span><span><strong>New experiment</strong><small>A clean space for your next lab.</small></span></button><button class="start" data-action="import"><span class="icon">↥</span><span><strong>Import data</strong><small>CSV, Excel, text or a saved project.</small></span></button><button class="start" data-action="quick"><span class="icon">⌁</span><span><strong>Quick plot</strong><small>Paste a table. See your data.</small></span></button></div><div class="heading"><h2>Your experiments</h2><small>${S.projects.length} saved locally</small></div>${
-      S.projects.length
-        ? `<div class="cards">${S.projects
-            .slice(0, 9)
-            .map(
-              (p) =>
-                `<button class="card" data-action="open" data-id="${p.id}"><span style="color:var(--blue);font-size:1.3rem">▤</span><strong>${esc(p.name)}</strong><small>Edited ${new Date(p.updated).toLocaleDateString()} · revision ${p.version}</small></button>`,
-            )
-            .join("")}</div>`
-        : '<p class="helper" style="margin:12px 0 30px">Create your first experiment, or explore the example below.</p>'
-    }<div class="demo"><div class="demo-copy"><span class="tag">SYNTHETIC EXAMPLE</span><h2>A pendulum. A few measurements.<br>A clearer picture.</h2><p>See raw timings become periods, uncertainty bars, a fitted line and a comparison with theory.</p><button data-action="demo">Explore the example ↗</button></div><div id="demo-plot" class="demo-plot"></div></div><div class="heading" style="margin-top:30px"><div><h3>Start with the experiment you know</h3><p class="helper" style="margin-top:6px">24 editable starting points across physics.</p></div><button data-action="templates">Browse templates</button></div></div>`;
+  setNavigation("home");
+  document.title = "Better Exl · Your lab, in focus";
+  $("#main").innerHTML = `
+    <header class="topbar home-topbar"><div class="breadcrumb">${icon("grid", 16)}<span>Workspace</span><span class="crumb-slash">/</span><strong>Overview</strong></div><div class="actions"><button class="search-button" data-action="search-projects">${icon("search", 16)}<span>Find an experiment</span><kbd>⌘ K</kbd></button><button class="help-button" data-action="help" aria-label="Help">${icon("help", 19)}</button><span class="top-avatar">YL</span></div></header>
+    <div class="overview">
+      <div class="welcome"><div><div class="eyebrow"><span class="live-dot"></span> YOUR PERSONAL LAB WORKSPACE</div><h1>Your lab, in focus.</h1><p>Less time wrestling with data. More time discovering what it means.</p></div><button class="primary create-top" data-action="new">${icon("plus", 18)} New experiment</button></div>
+      <div class="starts">
+        <button class="start" data-action="new"><span class="start-icon violet">${icon("flask", 23)}</span><span><strong>Start an experiment</strong><small>A fresh page for your next question.</small></span><span class="start-arrow">${icon("arrow", 17)}</span></button>
+        <button class="start" data-action="import"><span class="start-icon teal">${icon("import", 23)}</span><span><strong>Bring your data</strong><small>Drop in a CSV, Excel file or project.</small></span><span class="start-arrow">${icon("arrow", 17)}</span></button>
+        <button class="start" data-action="quick"><span class="start-icon amber">${icon("plot", 23)}</span><span><strong>Make a quick plot</strong><small>Paste your measurements. Find the story.</small></span><span class="start-arrow">${icon("arrow", 17)}</span></button>
+      </div>
+      <section class="experiment-section"><div class="heading"><div class="heading-title"><h2>Your experiments</h2><span class="count-pill">${S.projects.length}</span></div><button class="link" data-action="search-projects">${icon("search", 15)} Find experiment</button></div>
+      ${
+        S.projects.length
+          ? `<div class="experiment-cards">${S.projects
+              .slice(0, 9)
+              .map(
+                (p, i) =>
+                  `<button class="experiment-card" data-action="open" data-id="${p.id}"><div class="experiment-card-top"><span class="folder-icon tone-${i % 3}">${icon("flask", 22)}</span><span class="card-open">${icon("external", 15)}</span></div><h3>${esc(p.name)}</h3><p>Measurements, models & notes</p><div class="experiment-card-foot"><span>${icon("clock", 13)} ${new Date(p.updated).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span><span>Revision ${p.version}</span></div></button>`,
+              )
+              .join("")}</div>`
+          : `<div class="empty-projects"><div class="empty-experiment-icon">${icon("folder", 27)}</div><div><h3>A home for every experiment.</h3><p>Start something new, or explore the guided example below.</p></div><button data-action="new">Create your first experiment ${icon("arrow", 15)}</button></div>`
+      }</section>
+      <section class="demo"><div class="demo-copy"><div class="eyebrow demo-eyebrow">${icon("spark", 15)} LEARN BY EXPLORING</div><h2>A simple pendulum.<br>A whole new perspective.</h2><p>Turn raw timings into uncertainty bars, a fitted model and a comparison with theory. Follow the entire journey in one workspace.</p><button class="primary" data-action="demo">Explore the example ${icon("arrow", 17)}</button><span class="demo-disclaimer">Synthetic teaching data · 10 measurements</span></div><div class="demo-figure"><div class="demo-figure-head"><span><span class="live-dot"></span> Pendulum study</span><span class="mini-tag">T² vs. length</span></div><div id="demo-plot" class="demo-plot"></div><div class="demo-figure-foot"><span><i class="legend-point"></i> Measurement</span><span><i class="legend-line"></i> Linear model</span><strong>Make the relationship visible.</strong></div></div></section>
+      <section class="template-section"><div class="heading"><div><h2>A head start for your next lab</h2><p class="helper">Thoughtful starting points. Every column and equation is yours to change.</p></div><button class="link" data-action="templates">Browse all 24 ${icon("arrow", 16)}</button></div><div class="template-strip">${[
+        ["pendulum", "Mechanics", "Pendulums & motion", "flask"],
+        ["rc", "Electronics", "Circuits & decay", "bolt"],
+        ["malus", "Optics", "Light & polarization", "sun"],
+        ["sound", "Waves", "Sound & oscillations", "wave"],
+      ]
+        .map(
+          ([id, category, title, glyph]) =>
+            `<button class="template-tile" data-action="template" data-id="${id}"><span class="template-glyph">${icon(glyph, 21)}</span><span><strong>${category}</strong><small>${title}</small></span>${icon("arrow", 15)}</button>`,
+        )
+        .join("")}</div></section>
+      <footer class="workspace-footer"><span>${icon("shield", 14)} ${WEB ? "Private by default. Saved in this browser." : "Your experiments stay on your computer."}</span><button class="link" data-action="help">Built for the way you do science ${icon("arrow", 14)}</button></footer>
+    </div>`;
   Plotly.newPlot(
     "demo-plot",
     [
@@ -259,42 +312,49 @@ function home() {
         x: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1],
         y: [0.82, 1.19, 1.62, 2.04, 2.4, 2.85, 3.21, 3.64, 4, 4.46],
         mode: "markers",
-        marker: { color: "#3468e8", size: 7 },
+        marker: {
+          color: "#6762e8",
+          size: 7,
+          line: { color: "white", width: 1.5 },
+        },
         error_y: {
           type: "constant",
           value: 0.1,
-          color: "#8ca9ed",
+          color: "#b0acef",
           thickness: 1,
+          width: 2,
         },
       },
       {
         x: [0.15, 1.15],
         y: [0.6, 4.63],
         mode: "lines",
-        line: { color: "#3468e8", width: 1.5 },
+        line: { color: "#aba8e9", width: 1.7, dash: "dot" },
       },
     ],
     {
-      height: 270,
-      margin: { t: 30, r: 25, b: 45, l: 55 },
+      height: 255,
+      margin: { t: 15, r: 25, b: 44, l: 53 },
       showlegend: false,
-      font: { family: "Segoe UI, sans-serif", color: "#657792", size: 11 },
+      font: { family: "Inter, sans-serif", color: "#8b91a3", size: 10 },
       xaxis: {
-        title: { text: "Length (m)" },
-        gridcolor: "#edf2f8",
+        title: { text: "Length (m)", font: { size: 11 } },
+        gridcolor: "#f0f1f7",
         zeroline: false,
+        ticksuffix: " ",
       },
       yaxis: {
-        title: { text: "Period² (s²)" },
-        gridcolor: "#edf2f8",
+        title: { text: "Period² (s²)", font: { size: 11 } },
+        gridcolor: "#f0f1f7",
         zeroline: false,
       },
-      paper_bgcolor: "#fcfdff",
-      plot_bgcolor: "#fcfdff",
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: "rgba(0,0,0,0)",
     },
     { staticPlot: true, responsive: true, displayModeBar: false },
   );
 }
+
 function newDialog(template = "blank") {
   modal(
     "New experiment",
@@ -316,6 +376,7 @@ function newDialog(template = "blank") {
   );
 }
 function templates() {
+  setNavigation("templates");
   const cards = (q) =>
     S.config.templates
       .filter((t) =>
@@ -333,13 +394,14 @@ function templates() {
     `<header class="topbar"><div><div class="crumb">Starting points</div><h1>Experiment templates</h1></div><button data-action="back">Back to workspace</button></header><div class="overview"><div class="intro"><div class="eyebrow">A STARTING POINT, NOT A BLACK BOX</div><h1>Built around the measurements you take.</h1><p>Suggested columns, units, models and assumptions. All editable.</p></div><input id="template-search" placeholder="Search mechanics, circuits, optics…" style="max-width:440px;margin:25px 0 5px" aria-label="Search templates"><div class="cards" id="template-cards">${cards("")}</div></div>`;
 }
 function workspace() {
+  setNavigation("");
   const p = S.p,
     s = sheet();
   if (!p || !s) return;
   S.sid = s.id;
   document.title = p.name + " · Better Exl";
   $("#main").innerHTML =
-    `<header class="topbar"><div><div class="crumb">Experiments / ${esc(s.name)}</div><h1 id="project-title" tabindex="0" title="Double-click to rename">${esc(p.name)}</h1></div><div class="actions"><span class="save" id="save">${S.dirty ? "Saving…" : "Saved on this computer"}</span><button data-action="undo" id="undo" ${S.undo.length ? "" : "disabled"} title="Undo">↶</button><button data-action="redo" id="redo" ${S.redo.length ? "" : "disabled"} title="Redo">↷</button><button data-action="import">↥ Import</button><button class="primary" data-action="export">Export ↗</button></div></header><div class="navrow"><nav class="tabs">${[
+    `<header class="topbar"><div><div class="crumb">Experiments / ${esc(s.name)}</div><h1 id="project-title" tabindex="0" title="Double-click to rename">${esc(p.name)}</h1></div><div class="actions"><span class="save" id="save">${S.dirty ? "Saving…" : SAVED_LABEL}</span><button data-action="undo" aria-label="Undo" id="undo" ${S.undo.length ? "" : "disabled"} title="Undo">↶</button><button data-action="redo" aria-label="Redo" id="redo" ${S.redo.length ? "" : "disabled"} title="Redo">↷</button><button data-action="focus" class="focus-button" title="Focus on your data" aria-label="Toggle focus mode">${icon("focus", 16)}</button><button data-action="import">${icon("import", 15)} Import</button><button class="primary" data-action="export">Export ${icon("external", 15)}</button></div></header><div class="navrow"><nav class="tabs">${[
       ["data", "Data & graph"],
       ["fit", "Fit & theory"],
       ["stats", "Statistics"],
@@ -404,7 +466,7 @@ function computed() {
   });
 }
 function graphBox(tall = false) {
-  return `<section class="graphbox"><div class="graphhead"><h3>Graph</h3><div class="actions"><button class="small" data-action="graph-settings">Customize</button><button class="small" data-action="annotation">+ Note</button><button class="small" data-action="png">↓ PNG</button><button class="small" data-action="svg">SVG</button></div></div><div id="graph" class="graph ${tall ? "tall" : ""}" aria-label="Interactive scientific graph"></div><div class="graphnote"><span>Double-click labels to edit · drag to zoom · double-click the plot to reset</span><button class="link" data-action="pdf">Print / PDF</button></div></section>`;
+  return `<section class="graphbox"><div class="graphhead"><h3>Graph</h3><div class="actions"><button class="small" data-action="graph-settings">Customize</button><button class="small" data-action="annotation">+ Note</button><button class="small" data-action="png">↓ PNG</button><button class="small" data-action="svg">SVG</button></div></div><div id="graph" class="graph ${tall ? "tall" : ""}" aria-label="Interactive scientific graph"><div class="graph-loading"><span class="loading-ring"></span><p>${WEB ? "Preparing your graph…" : "Calculating…"}</p><small>Your measurements will appear here.</small></div></div><div class="graphnote"><span>Double-click labels to edit · drag to zoom · double-click the plot to reset</span><button class="link" data-action="pdf">Print / PDF</button></div></section>`;
 }
 function inspector() {
   const s = sheet(),
@@ -1456,6 +1518,19 @@ async function download(kind) {
     );
     return;
   }
+  if (WEB) {
+    const result = await api("/api/export", "POST", {
+      project: S.p,
+      sheetId: S.sid,
+      kind,
+    });
+    const content = result.base64
+      ? Uint8Array.from(atob(result.base64), (c) => c.charCodeAt(0))
+      : result.text;
+    dl(content, result.name, result.type);
+    toast("Export ready.");
+    return;
+  }
   const r = await fetch("/api/export", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Better-Exl": token },
@@ -1640,12 +1715,57 @@ async function latex(fit = false) {
 function help() {
   modal(
     "Your first lab, in five steps",
-    `<ol style="line-height:1.8;padding-left:22px"><li>Create an experiment or import CSV / XLSX. Templates start with empty measurements; the pendulum example is labelled synthetic.</li><li>Click column headings to set names, symbols, units and uncertainty. Put raw values in the main cell and optional standard uncertainty in the smaller ± cell.</li><li>Add calculated columns with formulas such as <code>t/N</code> or <code>2*d/t^2</code>. Open a calculated column’s uncertainty budget to inspect contributions.</li><li>Choose X and Y, then open Fit & theory. Check guesses, units and fitting method. Enter an independent physical prediction to compare with your measurements.</li><li>Inspect residuals, record assumptions in Notebook and export a project backup or complete analysis bundle.</li></ol><hr><p class="helper">Double-click graph labels to edit them. Tab / Enter moves between cells; paste multiple rows from Excel. Shift-click selects a rectangular range. Ctrl/Cmd+S saves, Ctrl/Cmd+Z undoes; use the redo button or Ctrl/Cmd+Shift+Z. Projects autosave to a local database. Keep the local server running, and export backups before moving computers.</p><p class="helper" style="margin-top:12px">Uncertainty propagation is first order. Fits assume independent rows, with within-row X/Y correlation unsupported by ODR. Theory bands and general covariance fitting are not part of v1. See the repository’s METHODS.md for precise assumptions.</p>`,
+    `<ol style="line-height:1.8;padding-left:22px"><li>Create an experiment or import CSV / XLSX. Templates start with empty measurements; the pendulum example is labelled synthetic.</li><li>Click column headings to set names, symbols, units and uncertainty. Put raw values in the main cell and optional standard uncertainty in the smaller ± cell.</li><li>Add calculated columns with formulas such as <code>t/N</code> or <code>2*d/t^2</code>. Open a calculated column’s uncertainty budget to inspect contributions.</li><li>Choose X and Y, then open Fit & theory. Check guesses, units and fitting method. Enter an independent physical prediction to compare with your measurements.</li><li>Inspect residuals, record assumptions in Notebook and export a project backup or complete analysis bundle.</li></ol><hr><p class="helper">Double-click graph labels to edit them. Tab / Enter moves between cells; paste multiple rows from Excel. Shift-click selects a rectangular range. Ctrl/Cmd+S saves, Ctrl/Cmd+Z undoes; use the redo button or Ctrl/Cmd+Shift+Z. Projects autosave on your device. Export project backups regularly and before moving between devices.</p><p class="helper" style="margin-top:12px">Uncertainty propagation is first order. Fits assume independent rows, with within-row X/Y correlation unsupported by ODR. Theory bands and general covariance fitting are not part of v1. See the repository’s METHODS.md for precise assumptions.</p>`,
     '<button data-action="close">Got it</button>',
   );
 }
 
+function searchProjects() {
+  const list = (q) =>
+    S.projects
+      .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
+      .map(
+        (p) =>
+          `<button class="search-result" data-action="open" data-id="${p.id}">${icon("flask", 19)}<span><strong>${esc(p.name)}</strong><small>Edited ${new Date(p.updated).toLocaleDateString()}</small></span>${icon("arrow", 16)}</button>`,
+      )
+      .join("") ||
+    '<p class="helper">No matching experiments. Create a new one to get started.</p>';
+  S.searchProjects = list;
+  modal(
+    "Find an experiment",
+    field(
+      "Search your workspace",
+      "project-search",
+      "",
+      'placeholder="Experiment name…"',
+    ) + `<div id="project-search-results">${list("")}</div>`,
+    '<button data-action="new">New experiment</button>',
+  );
+}
+async function storageDetails() {
+  const stats = WEB ? await window.BetterExlWeb.storageInfo() : null;
+  modal(
+    "Your data belongs to you",
+    `<div class="storage-illustration">${icon("shield", 32)}</div><h3>${WEB ? "Saved in this browser. Private to this device." : "Saved on your computer."}</h3><p style="margin-top:12px">${WEB ? "Experiments and revisions stay in this browser’s storage. They are not uploaded to GitHub or synced between devices. Clearing site data, private browsing, or changing browsers can remove access to them." : "Experiments and revisions are stored in your local Better Exl database."}</p><p>Use <strong>Export → Project backup</strong> to keep a copy or move your work to another device. Import the JSON file to continue exactly where you left off.</p>${stats ? `<p class="helper">This site is using about ${((stats.usage || 0) / 1024 / 1024).toFixed(1)} MB of browser storage.</p>` : ""}<div class="notice info">${WEB ? "The first calculation downloads the analysis tools. Your measurements are processed on your device." : "The local edition works offline after its first setup."}</div>`,
+    '<button data-action="close">Got it</button>' +
+      (S.p
+        ? '<button class="primary" data-action="export">Export a backup</button>'
+        : ""),
+  );
+}
 const actions = {
+  "search-projects": searchProjects,
+  storage: storageDetails,
+  focus: () => {
+    document.body.classList.toggle("focus-mode");
+    graph();
+  },
+  "retry-engine": async () => {
+    if (WEB) {
+      await window.BetterExlWeb.retry();
+      if (S.p) await analyze();
+    }
+  },
   close,
   home: async () => {
     await save();
@@ -2179,6 +2299,8 @@ document.addEventListener("change", async (e) => {
   }
 });
 document.addEventListener("input", (e) => {
+  if (e.target.id === "project-search")
+    $("#project-search-results").innerHTML = S.searchProjects(e.target.value);
   if (e.target.id === "search") {
     S.search = e.target.value;
     S.page = 0;
@@ -2231,11 +2353,28 @@ document.addEventListener("paste", (e) => {
   }
 });
 document.addEventListener("keydown", async (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    searchProjects();
+    return;
+  }
+  if (
+    e.key.toLowerCase() === "n" &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    !e.altKey &&
+    !e.target.matches("input,textarea,select") &&
+    !$("#dialog").open
+  ) {
+    e.preventDefault();
+    newDialog();
+    return;
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
     e.preventDefault();
     try {
       await save();
-      toast("Saved on this computer.");
+      toast(SAVED_LABEL + ".");
     } catch (err) {
       toast(err.message, true);
     }
@@ -2299,12 +2438,21 @@ window.addEventListener("beforeunload", (e) => {
 });
 (async () => {
   try {
+    renderIcons();
+    if (WEB) {
+      $("#storage-caption").textContent = "Saved in this browser.";
+      showEngine(window.BetterExlWeb.status());
+      window.addEventListener("better-exl-engine", (event) =>
+        showEngine(event.detail),
+      );
+    }
     [S.config, S.projects] = await Promise.all([
       api("/api/config"),
       api("/api/projects"),
     ]);
     sidebar();
     home();
+    if (WEB) setTimeout(() => window.BetterExlWeb.warmup(), 1500);
     const draft = localStorage.getItem("better-exl-draft");
     if (draft) {
       S.recovery = JSON.parse(draft);
@@ -2320,6 +2468,6 @@ window.addEventListener("beforeunload", (e) => {
     $("#main").innerHTML =
       '<div class="overview"><h1>Couldn’t open your workspace</h1><p>' +
       esc(e.message) +
-      "</p><p>Keep the local server running, then refresh this page.</p></div>";
+      `</p><p>${WEB ? "Refresh the page to retry. Your saved experiments remain in this browser." : "Keep the local server running, then refresh this page."}</p></div>`;
   }
 })();

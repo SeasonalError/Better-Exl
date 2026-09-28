@@ -4,44 +4,105 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="api-token" content="__API_TOKEN__" />
+    <meta name="theme-color" content="#5754df" />
     <meta
       name="description"
-      content="Your local physics lab workspace for measurements, uncertainty, theory and scientific graphs."
+      content="A clearer space for your next discovery. Collect measurements, explore uncertainty, fit physical models and create beautiful scientific graphs in Better Exl."
     />
-    <title>Better Exl · Your lab workspace</title>
+    <title>Better Exl · Your lab, in focus</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%233468e8'/%3E%3Ctext x='9' y='35' font-size='36' fill='white'%3E∿%3C/text%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='13' fill='%235754df'/%3E%3Cpath d='M8 25h5c3-18 7-18 11 0s8 18 11 0h5' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/design.css" />
     <script src="/vendor/plotly.js" defer></script>
+    <script src="/static/icons.js" defer></script>
     <script src="/static/app.js" defer></script>
   </head>
   <body>
     <div class="shell">
       <aside class="sidebar">
-        <button class="brand" data-action="home">
-          <span class="mark">∿</span
-          ><span>better exl<small>THE LAB WORKSPACE</small></span></button
-        ><button class="new" data-action="new">
-          + <span>New experiment</span>
+        <button class="brand" data-action="home" aria-label="Better Exl home">
+          <span class="mark"
+            ><svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M2 12h3c2-10 4-10 7 0s5 10 7 0h3" /></svg
+          ></span>
+          <span>better exl<small>A SPACE FOR SCIENCE</small></span>
         </button>
-        <nav>
-          <button data-action="home">⌂ <span>Overview</span></button
-          ><button data-action="templates">
-            ▦ <span>Experiment templates</span></button
-          ><button data-action="import">↥ <span>Import data</span></button>
+        <button class="workspace-picker" data-action="home">
+          <span class="avatar">YL</span
+          ><span>Your lab<small>Personal workspace</small></span
+          ><span class="picker-chevron">⌄</span>
+        </button>
+        <button class="new" data-action="new">
+          <span class="nav-icon" data-icon="plus"></span
+          ><span>New experiment</span><kbd>N</kbd>
+        </button>
+        <nav class="primary-nav" aria-label="Workspace navigation">
+          <button data-action="home" class="nav-active">
+            <span class="nav-icon" data-icon="grid"></span><span>Overview</span>
+          </button>
+          <button data-action="templates">
+            <span class="nav-icon" data-icon="layers"></span
+            ><span>Experiment templates</span><span class="nav-count">24</span>
+          </button>
+          <button data-action="import">
+            <span class="nav-icon" data-icon="import"></span
+            ><span>Import data</span>
+          </button>
         </nav>
-        <div class="side-label">YOUR EXPERIMENTS</div>
+        <div class="side-label">
+          YOUR EXPERIMENTS<button
+            class="link"
+            data-action="new"
+            title="New experiment"
+          >
+            +
+          </button>
+        </div>
         <div id="projects"></div>
         <div class="side-bottom">
-          <button data-action="help">? <span>Quick reference</span></button>
-          <p>
-            On your computer<small>No account. Your data stays local.</small>
-          </p>
+          <div id="engine-state" class="engine-state" aria-live="polite">
+            <span class="engine-dot"></span
+            ><span id="engine-message">Analysis ready</span>
+          </div>
+          <button data-action="help">
+            <span class="nav-icon" data-icon="help"></span
+            ><span>Help & shortcuts</span>
+          </button>
+          <a
+            href="https://github.com/SeasonalError/Better-Exl"
+            target="_blank"
+            rel="noopener noreferrer"
+            ><span class="nav-icon" data-icon="external"></span
+            ><span>View on GitHub</span></a
+          >
+          <button class="privacy-card" data-action="storage">
+            <span class="nav-icon" data-icon="shield"></span
+            ><span
+              >Your data, your device.<small id="storage-caption"
+                >Saved locally. Always yours.</small
+              ></span
+            >
+          </button>
         </div>
       </aside>
-      <main id="main"><div class="empty">Opening your workspace…</div></main>
+      <main id="main">
+        <div class="opening">
+          <span class="opening-mark">∿</span>
+          <h1>Your lab is opening.</h1>
+          <p>A little space to make sense of things.</p>
+        </div>
+      </main>
     </div>
     <dialog id="dialog"><div id="modal"></div></dialog>
     <div id="toasts" role="status" aria-live="polite"></div>
