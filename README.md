@@ -75,6 +75,8 @@ This is a connected, usable v1 core, not every possible research analysis. Read 
 
 ## Development and verification
 
+Verified with 36 numerical/storage tests and 25 browser checks. See [VALIDATION.md](docs/VALIDATION.md) for coverage, versions and platform limits.
+
 Python: Flask, NumPy, SciPy, Pint, Plotly and openpyxl. Browser: plain JavaScript and locally served Plotly. SQLite is included in Python. No frontend build step or CDN.
 
 ```bash

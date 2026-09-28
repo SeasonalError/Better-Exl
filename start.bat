@@ -9,7 +9,7 @@ if not exist .venv\better-exl-installed (
   if errorlevel 1 goto fail
   echo installed>.venv\better-exl-installed
 )
-.venv\Scripts\python.exe run.py
+.venv\Scripts\python.exe run.py %*
 if errorlevel 1 goto fail
 exit /b
 :fail

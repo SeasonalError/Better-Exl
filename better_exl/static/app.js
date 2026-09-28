@@ -817,15 +817,6 @@ async function graph() {
       } else if (e.target.closest(".ytitle")) {
         kind = "yLabel";
         value = sheet().plot.yLabel || label(sheet().plot.y);
-      } else if (e.target.closest(".legendtext, .traces")) {
-        value =
-          e.target.closest(".legendtext")?.textContent ||
-          e.target.closest(".traces")?.querySelector(".legendtext")
-            ?.textContent;
-        const t = el.data.find((t) => t.name === value);
-        if (!t?.meta || t.meta === "band") return;
-        kind = "legend";
-        key = t.meta;
       } else if (e.target.closest(".annotation-text")) {
         value = e.target.closest(".annotation-text").textContent;
         key = sheet().plot.annotations.findIndex((n) => n.text === value);
@@ -841,6 +832,18 @@ async function graph() {
           '<button data-action="close">Cancel</button><button class="primary" data-action="graph-text">Apply</button>',
         );
       }
+    });
+    // Plotly's legend hit rectangle sits above its text; use its native event.
+    el.on("plotly_legenddoubleclick", (event) => {
+      const trace = el.data[event.curveNumber];
+      if (!trace?.meta || trace.meta === "band") return false;
+      S.edit = { kind: "legend", key: trace.meta };
+      modal(
+        "Edit legend",
+        field("Text", "graph-text", trace.name),
+        '<button data-action="close">Cancel</button><button class="primary" data-action="graph-text">Apply</button>',
+      );
+      return false;
     });
     el.on("plotly_click", () => {
       if (S.tab === "data")

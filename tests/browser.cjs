@@ -66,7 +66,10 @@ const check = (condition, message) => {
       const button = page.locator(`[data-action="${action}"]:visible`).first();
       const handle = await button.elementHandle();
       await button.click();
-      await page.waitForFunction(el => !el.isConnected || !el.disabled, handle);
+      await page.waitForFunction(
+        (el) => !el.isConnected || !el.disabled,
+        handle,
+      );
     };
     const state = () => page.evaluate(() => ({ p: S.p, a: S.a, tab: S.tab }));
     await page.goto("http://127.0.0.1:8766/");
@@ -104,6 +107,26 @@ const check = (condition, message) => {
     check(
       (await state()).p.sheets[0].plot.title === "A graph I can edit",
       "Graph double click",
+    );
+    await page.locator("#graph .xtitle").dblclick();
+    await page.locator("#graph-text").fill("Pendulum length (m)");
+    await click("graph-text");
+    check(
+      (await state()).p.sheets[0].plot.xLabel === "Pendulum length (m)",
+      "Axis label double click",
+    );
+    await page
+      .locator("#graph .legendtext")
+      .filter({ hasText: /^Theory$/ })
+      .locator("..")
+      .locator(".legendtoggle")
+      .dblclick();
+    await page.locator("#graph-text").fill("Small-angle prediction");
+    await click("graph-text");
+    check(
+      (await state()).p.sheets[0].plot.names.theory ===
+        "Small-angle prediction",
+      "Legend double click",
     );
     await page.locator('[data-cell="0:1:value"]').fill("9.1");
     await page.locator('[data-cell="1:1:value"]').focus();
@@ -190,15 +213,13 @@ const check = (condition, message) => {
         .includes("<svg"),
       "SVG download",
     );
-    await page
-      .locator("#file-picker")
-      .setInputFiles({
-        name: "measurements.csv",
-        mimeType: "text/csv",
-        buffer: Buffer.from(
-          "Time [s],Position [m]\n0,1\n1,3.1\n2,4.9\n3,7.1\n4,8.9\n",
-        ),
-      });
+    await page.locator("#file-picker").setInputFiles({
+      name: "measurements.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(
+        "Time [s],Position [m]\n0,1\n1,3.1\n2,4.9\n3,7.1\n4,8.9\n",
+      ),
+    });
     await page.waitForSelector("#import-header");
     await click("preview-import");
     check(
@@ -233,6 +254,11 @@ const check = (condition, message) => {
       "Signal output separate dataset",
     );
     await page.locator('.tabs [data-action="tab"][data-id="data"]').click();
+    await page.waitForFunction(
+      () =>
+        S.a?.values.x?.length === 5 &&
+        document.querySelector("#graph")?.data?.length,
+    );
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({
       path: path.join(root, "artifacts/mobile.png"),
