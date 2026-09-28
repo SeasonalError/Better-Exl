@@ -1,6 +1,12 @@
 /* Scientific Python runs in a dedicated worker; measurements never leave it. */
 "use strict";
 const RUNTIME = "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/";
+const revision = new URL(self.location.href).searchParams.get("v");
+const asset = (name) => {
+  const url = new URL(name, self.location.href);
+  if (revision) url.searchParams.set("v", revision);
+  return url;
+};
 let python;
 let ready;
 let queue = Promise.resolve();
@@ -17,7 +23,7 @@ async function boot() {
   progress("Loading numerical methods", 35);
   await python.loadPackage(["numpy", "scipy", "micropip"]);
   progress("Connecting units and file import", 70);
-  const manifest = await (await fetch("./runtime-manifest.json")).json();
+  const manifest = await (await fetch(asset("./runtime-manifest.json"))).json();
   const wheels = manifest.wheels.map(
     (file) => new URL("./wheels/" + file, self.location.href).href,
   );
@@ -28,7 +34,7 @@ async function boot() {
   python.FS.mkdirTree("/app/better_exl");
   await Promise.all(
     manifest.python.map(async (file) => {
-      const response = await fetch("./python/" + file);
+      const response = await fetch(asset("./python/" + file));
       if (!response.ok)
         throw Error("Could not load the analysis engine. Please reload.");
       python.FS.writeFile("/app/better_exl/" + file, await response.text());

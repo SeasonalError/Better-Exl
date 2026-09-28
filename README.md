@@ -4,6 +4,8 @@
 
 A Python-powered website for physics students: enter or import measurements, define units and equations, inspect uncertainty, fit models, compare independent predictions and export reproducible results. Use it online without installing Python, or run the local edition on your computer.
 
+![Better Exl online workspace](docs/website-preview.jpg)
+
 ## Open the website
 
 **[Launch Better Exl](https://seasonalerror.github.io/Better-Exl/)**

@@ -1,6 +1,6 @@
 """Build a portable static website; the scientific engine runs in the browser."""
 
-import argparse, json, pathlib, shutil, subprocess, sys, urllib.request
+import argparse, hashlib, json, pathlib, re, shutil, subprocess, sys, urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -37,6 +37,14 @@ html = html.replace(
     '<script src="./assets/app.js" defer></script>',
     '<script src="./assets/client.js" defer></script>\n    <script src="./assets/app.js" defer></script>',
 )
+source_files = [ROOT / "scripts/build_web.py", ROOT / "requirements.txt"]
+source_files += sorted((ROOT / "better_exl").rglob("*.py"))
+source_files += sorted((ROOT / "better_exl/static").glob("*"))
+source_files += sorted((ROOT / "web").glob("*.js"))
+revision = hashlib.sha256(
+    b"\n".join(p.read_bytes() for p in source_files if p.is_file())
+).hexdigest()[:12]
+html = re.sub(r'((?:src|href)="\./assets/[^"?]+)(")', rf"\1?v={revision}\2", html)
 (out / "index.html").write_text(html)
 (out / ".nojekyll").touch()
 config = {

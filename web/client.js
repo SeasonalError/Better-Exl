@@ -3,7 +3,13 @@
 (() => {
   const clone = (v) => JSON.parse(JSON.stringify(v));
   const root = new URL("./", document.currentScript.src);
-  const seedPromise = fetch(new URL("seed.json", root)).then((r) => {
+  const revision = new URL(document.currentScript.src).searchParams.get("v");
+  const asset = (name) => {
+    const url = new URL(name, root);
+    if (revision) url.searchParams.set("v", revision);
+    return url;
+  };
+  const seedPromise = fetch(asset("seed.json")).then((r) => {
     if (!r.ok)
       throw Error("The workspace files could not load. Refresh to retry.");
     return r.json();
@@ -135,7 +141,7 @@
   };
   function workerCall(operation, payload = {}) {
     if (!worker) {
-      worker = new Worker(new URL("worker.js", root));
+      worker = new Worker(asset("worker.js"));
       worker.onmessage = ({ data }) => {
         if (data.type === "progress") {
           announce(data);
