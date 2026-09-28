@@ -804,6 +804,19 @@ async function graph() {
     },
     modeBarButtonsToRemove: ["lasso2d", "select2d"],
   });
+  // The grid can resize while a chart is rendering; observe its actual container.
+  if (S.observedGraph !== el) {
+    S.graphObserver?.disconnect();
+    clearTimeout(S.resizeTimer);
+    S.observedGraph = el;
+    S.graphObserver = new ResizeObserver(() => {
+      clearTimeout(S.resizeTimer);
+      S.resizeTimer = setTimeout(() => {
+        if (el.isConnected && el.data) Plotly.Plots.resize(el).catch(() => {});
+      }, 60);
+    });
+    S.graphObserver.observe(el);
+  }
   if (!el._better) {
     el._better = true;
     el.addEventListener("dblclick", (e) => {

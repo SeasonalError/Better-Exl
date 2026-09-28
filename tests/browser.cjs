@@ -260,6 +260,14 @@ const check = (condition, message) => {
         document.querySelector("#graph")?.data?.length,
     );
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForFunction(() => {
+      const graph = document.querySelector("#graph");
+      const svg = graph?.querySelector(".main-svg");
+      return (
+        svg &&
+        Math.abs(svg.getBoundingClientRect().width - graph.clientWidth) < 2
+      );
+    });
     await page.screenshot({
       path: path.join(root, "artifacts/mobile.png"),
       fullPage: true,
