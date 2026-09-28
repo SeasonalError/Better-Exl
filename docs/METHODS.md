@@ -76,7 +76,9 @@ Contours linearly interpolate scattered measurements on a 70×70 grid inside the
 
 ## Reproducibility
 
-Project JSON retains raw measurements, uncertainty conventions, formulas, constants/correlations, inclusion choices, models, plots and notes. Source snapshots retain imported tabular text. SQLite keeps immutable revisions and checks concurrent edit versions. Browser drafts can be recovered as a separate project.
+Project JSON retains raw measurements, uncertainty conventions, formulas, constants/correlations, inclusion choices, models, plots and notes. Source snapshots retain imported tabular text. SQLite in the local edition, and IndexedDB in the online edition, keep immutable revisions and check concurrent edit versions. Browser drafts can be recovered as a separate project. Website data stays in the current browser and does not sync across devices. Export project backups; clearing site storage can delete the online workspace.
+
+The GitHub Pages edition runs this engine in a dedicated Pyodide worker (Python 3.13.2, NumPy 2.2.5, SciPy 1.14.1). The local edition uses its installed Python packages. Algorithms are shared; library versions and their physical-constant datasets can differ. Preserve exported numerical results and record the runtime versions for reproducibility. The website needs network access to load its runtime; no offline-install guarantee is made.
 
 Raw CSV contains entered values and uncertainty overrides; project settings are needed to interpret defaults. Processed CSV includes evaluated standard uncertainties. Spreadsheet formula markers in exported text are escaped; original content remains in JSON. XLSX formula strings are not executed.
 

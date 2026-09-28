@@ -99,11 +99,17 @@ subprocess.run(
         }
     )
 )
-print(f"Static website built at {out}")
-
 # Bundle a pinned variable font; no third-party font requests at runtime.
 font = assets / "inter-latin.woff2"
 if not font.exists():
-    urllib.request.urlretrieve("https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.3.0/files/inter-latin-wght-normal.woff2", font)
-css=assets / "design.css"
-css.write_text("@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:swap;src:url(./inter-latin.woff2) format('woff2')}\n"+css.read_text())
+    urllib.request.urlretrieve(
+        "https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.3.0/files/inter-latin-wght-normal.woff2",
+        font,
+    )
+css = assets / "design.css"
+css.write_text(
+    "@font-face{font-family:Inter;font-style:normal;font-weight:100 900;"
+    "font-display:swap;src:url(./inter-latin.woff2) format('woff2')}\n"
+    + css.read_text()
+)
+print(f"Static website built at {out}")

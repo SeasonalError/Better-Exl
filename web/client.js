@@ -101,14 +101,12 @@
           updated: new Date().toISOString(),
         };
         projects.put(saved);
-        transaction
-          .objectStore("revisions")
-          .put({
-            projectId: saved.id,
-            version: saved.version,
-            created: saved.updated,
-            body: saved,
-          });
+        transaction.objectStore("revisions").put({
+          projectId: saved.id,
+          version: saved.version,
+          created: saved.updated,
+          body: saved,
+        });
       };
       transaction.oncomplete = () => resolve(saved);
       transaction.onerror = () =>

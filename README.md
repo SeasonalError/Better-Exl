@@ -1,8 +1,25 @@
 # Better Exl
 
-**Your measurements, uncertainty, models and graphs — together in one local lab workspace.**
+**Your measurements, uncertainty, models and graphs, together in one lab workspace.**
 
-A Python-powered website for physics students: enter or import measurements, define units and equations, inspect uncertainty, fit models, compare independent predictions and export reproducible results. No account, API key or cloud service required.
+A Python-powered website for physics students: enter or import measurements, define units and equations, inspect uncertainty, fit models, compare independent predictions and export reproducible results. Use it online without installing Python, or run the local edition on your computer.
+
+## Open the website
+
+**[Launch Better Exl](https://seasonalerror.github.io/Better-Exl/)**
+
+The online edition runs the same scientific engine in a background browser worker using Pyodide, NumPy, SciPy and Pint. You can start entering data immediately. The first analysis downloads Python and its numerical packages, which can take a little time. Keep an internet connection available for loading those tools. No account or API key is required.
+
+Experiments save automatically in **this browser on this device**, not in your GitHub repository or a cloud account. Export **Project backup** to keep a portable copy. Clearing website data, using private browsing or changing browsers can remove or hide your saved workspace. Online and local editions do not sync automatically; project JSON transfers between them.
+
+## Host your own copy on GitHub Pages
+
+1. Fork this repository, or push its files to your own public GitHub repository.
+2. Open **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+3. Open **Actions → Publish Better Exl website → Run workflow**. Subsequent pushes to `main` publish automatically after the tests pass.
+4. Open the website URL displayed under **Settings → Pages** or the deployment summary.
+
+The included workflow builds a static website. There is no server to manage and no secret API key to configure. Every asset path is relative, so repository subpaths work. The numerical runtime is pinned to Pyodide 0.28.3 on jsDelivr; the app code, Plotly, font and extra Python wheels are served with your website.
 
 ## Run on your computer
 
@@ -24,14 +41,14 @@ python -m pip install -r requirements.txt
 python run.py
 ```
 
-Use `python run.py --no-browser` for a headless session or `--data-dir /path/to/data` for another storage location. This app requires its Python backend; GitHub Pages alone cannot run it.
+Use `python run.py --no-browser` for a headless session or `--data-dir /path/to/data` for another storage location. The local edition uses a Python backend; the GitHub Pages edition runs Python inside the browser.
 
 ## Included in v1
 
 | Workflow | Features |
 |---|---|
 | Collect | Multiple experiments/datasets, spreadsheet editing, rectangular paste/copy, search, row inclusion and notes, undo/redo |
-| Save | SQLite autosave, immutable revisions, conflict protection, recovery of interrupted browser drafts, JSON project backup/import |
+| Save | Browser IndexedDB or local SQLite autosave, immutable revisions, conflict protection, recovery of interrupted drafts, JSON project backup/import |
 | Import | CSV, TSV, TXT, XLSX; preview, header row, delimiter, decimal comma and worksheet selection; original text retained |
 | Calculate | Named formulas, dimensional checks/conversion, scientific/custom constants, uncertainty columns, first-order propagation with shared dependencies, within-row correlations, inspectable budgets |
 | Plot | Scatter/line with X/Y error bars, histogram, box, contour, 3D scatter, extra series, log axes, limits and figure styles |
@@ -59,7 +76,7 @@ Tab moves between cells; Enter or ↑/↓ moves through rows. Paste a range from
 
 ## Storage and backups
 
-Projects save to **`~/.better-exl/experiments.sqlite3`** (your user profile on Windows), outside the source folder. Closing or updating the app does not delete them. Every autosave creates an immutable revision. Notebook → Revision history restores a separate experiment, preserving the current one. Conflicting edits from another tab are rejected rather than overwritten.
+Online projects save in IndexedDB under the website's origin, on your device. The sidebar's storage button explains this and shows estimated storage use when supported. In the local edition, projects save to **`~/.better-exl/experiments.sqlite3`** (your user profile on Windows), outside the source folder. Closing or updating the app does not delete them. Every autosave creates an immutable revision. Notebook → Revision history restores a separate experiment, preserving the current one. Conflicting edits from another tab are rejected rather than overwritten.
 
 Export **Project backup** regularly and import that JSON on another computer. The ZIP includes the whole project plus the selected dataset’s numerical outputs, report and reproduction script. CSV does not preserve formulas, modes or settings. Revisions are never automatically deleted, so the database can grow. Stop the server before copying the data directory as a full backup.
 
@@ -75,13 +92,22 @@ This is a connected, usable v1 core, not every possible research analysis. Read 
 
 ## Development and verification
 
-Verified with 36 numerical/storage tests and 25 browser checks. See [VALIDATION.md](docs/VALIDATION.md) for coverage, versions and platform limits.
+Verification details and platform limits are recorded in [VALIDATION.md](docs/VALIDATION.md).
 
-Python: Flask, NumPy, SciPy, Pint, Plotly and openpyxl. Browser: plain JavaScript and locally served Plotly. SQLite is included in Python. No frontend build step or CDN.
+Python: Flask, NumPy, SciPy, Pint, Plotly and openpyxl. Browser: plain JavaScript, Plotly and, for the static edition, Pyodide. SQLite is included in native Python. The local edition has no runtime CDN requirement; the online edition downloads its pinned WebAssembly runtime.
 
 ```bash
 # In the activated virtual environment:
 python -m unittest discover -s tests -v
+
+# Build and preview the static website:
+python scripts/build_web.py --out dist
+python -m http.server 8000 --directory dist
+
+# Optional checks of the actual WebAssembly engine and IndexedDB transport:
+npm install --no-save pyodide@0.28.3 fake-indexeddb@6.2.4
+node tests/web_runtime.cjs
+node tests/web_storage.cjs
 ```
 
 Optional browser suite:
@@ -96,6 +122,6 @@ node tests/browser.cjs
 
 To rerun an exported `reproduce.py`, activate this repository’s environment, **keep the repository root as the current directory**, and run `python /path/to/reproduce.py`. It writes `reproduced-analysis.json` and `reproduced-data.csv`. Preserve the app commit and dependency versions with a submitted report for long-term reproducibility.
 
-Code: `expressions.py` handles units/arithmetic, `engine.py` scientific methods, `storage.py` revisions, `exchange.py` import/export, `templates.py` starting points, `app.py` the local API and `static/` the interface.
+Code: `expressions.py` handles units/arithmetic, `engine.py` scientific methods, `storage.py` local revisions, `exchange.py` import/export, `templates.py` starting points, `app.py` the local API and `static/` the interface. `web/client.js` supplies IndexedDB and the browser transport, `web/worker.js` loads Python, and `web_api.py` exposes the same analysis operations without HTTP. `scripts/build_web.py` produces the Pages artifact.
 
 [MIT license](LICENSE). Dependencies retain their own licenses.

@@ -2,6 +2,14 @@
 
 The v1 implementation passed **36 numerical/API/storage tests** and **25 browser assertions**. The browser run recorded no page or console errors. This is evidence for the tested workflows, not a guarantee that every possible dataset or model is valid.
 
+## Online edition verification
+
+The v1.1 GitHub Pages edition passed **40 native Python tests**, **30 tests in the actual Pyodide WebAssembly runtime**, and **11 IndexedDB transport assertions**. The WebAssembly suite reruns the scientific reference tests and verifies the JSON boundary, original CSV text, ZIP project export and rejection of unsafe expressions. The IndexedDB checks cover distinct dataset IDs, persistence across client instances, immutable revisions, stale-tab rejection, and invalid saves without overwriting data.
+
+Commands: `python -m unittest discover -s tests -v`, `node tests/web_runtime.cjs`, and `node tests/web_storage.cjs` (build `dist` and install the documented Node dependencies first). The storage regression suite uses fake-indexeddb; live browser checks are recorded separately below.
+
+The browser runtime is Pyodide 0.28.3, Python 3.13.2, NumPy 2.2.5, SciPy 1.14.1, Pint 0.26.1 and openpyxl 3.1.5. The native package versions below are unchanged. The automated GitHub Pages build reruns all 40 native tests before publishing.
+
 ## Numerical and persistence checks
 
 - Restricted expression syntax, degree-aware trigonometry and dimensional errors.

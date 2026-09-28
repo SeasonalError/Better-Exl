@@ -143,9 +143,9 @@ function draft() {
     status("Unsaved · recovery storage full", true);
   }
 }
-function changed(action, render = false, calc = true) {
+function changed(action, render = false, calc = true, record = true) {
   S.p.log ??= [];
-  S.p.log.push({ time: new Date().toISOString(), action });
+  if (record) S.p.log.push({ time: new Date().toISOString(), action });
   S.dirty = true;
   draft();
   status("Saving…");
@@ -248,6 +248,7 @@ async function openProject(id) {
   S.redo = [];
   sidebar();
   workspace();
+  window.scrollTo(0, 0);
   await analyze();
 }
 async function create(body) {
@@ -265,9 +266,11 @@ async function create(body) {
   close();
   sidebar();
   workspace();
+  window.scrollTo(0, 0);
   await analyze();
 }
 function home() {
+  window.scrollTo(0, 0);
   setNavigation("home");
   document.title = "Better Exl · Your lab, in focus";
   $("#main").innerHTML = `
@@ -376,6 +379,7 @@ function newDialog(template = "blank") {
   );
 }
 function templates() {
+  window.scrollTo(0, 0);
   setNavigation("templates");
   const cards = (q) =>
     S.config.templates
@@ -587,6 +591,7 @@ async function graph() {
     a = S.a,
     s = sheet();
   if (!el || !a) return;
+  el.querySelector(".graph-loading")?.remove();
   const p = s.plot,
     idx = a.indices || [],
     x = idx.map((i) => a.values[p.x]?.[i]),
@@ -2192,17 +2197,29 @@ document.addEventListener("click", async (e) => {
     if (c) editColumn(c.dataset.column);
   }
 });
+function commitCell(el) {
+  const [i, j, kind] = el.dataset.cell.split(":"),
+    c = sheet().columns[j],
+    r = sheet().rows[i],
+    values = kind === "uncertainty" ? (r.uncertainties ??= {}) : r.values;
+  if (String(values[c.key] ?? "") === el.value) return;
+  const action = "Edited " + c.key + " row " + (+i + 1);
+  if (S.cellEdit === el) {
+    values[c.key] = el.value;
+    changed(action, false, true, false);
+  } else {
+    mutate(action, () => (values[c.key] = el.value));
+    S.cellEdit = el;
+  }
+}
+document.addEventListener("focusout", (e) => {
+  if (S.cellEdit === e.target) S.cellEdit = null;
+});
 document.addEventListener("change", async (e) => {
   const el = e.target;
   try {
     if (el.matches("[data-cell]")) {
-      const [i, j, kind] = el.dataset.cell.split(":"),
-        c = sheet().columns[j];
-      mutate("Edited " + c.key + " row " + (+i + 1), () => {
-        const r = sheet().rows[i];
-        if (kind === "uncertainty") (r.uncertainties ??= {})[c.key] = el.value;
-        else r.values[c.key] = el.value;
-      });
+      commitCell(el);
     } else if (el.matches("[data-include]")) {
       mutate(
         "Changed row inclusion",
@@ -2299,6 +2316,7 @@ document.addEventListener("change", async (e) => {
   }
 });
 document.addEventListener("input", (e) => {
+  if (e.target.matches("[data-cell]")) commitCell(e.target);
   if (e.target.id === "project-search")
     $("#project-search-results").innerHTML = S.searchProjects(e.target.value);
   if (e.target.id === "search") {
