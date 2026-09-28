@@ -1,2 +1,57 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="api-token" content="__API_TOKEN__"><meta name="description" content="Your local physics lab workspace for measurements, uncertainty, theory and scientific graphs."><title>Better Exl · Your lab workspace</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%233468e8'/%3E%3Ctext x='9' y='35' font-size='36' fill='white'%3E∿%3C/text%3E%3C/svg%3E"><link rel="stylesheet" href="/static/style.css"><script src="/vendor/plotly.js" defer></script><script src="/static/app.js" defer></script></head><body>
-<div class="shell"><aside class="sidebar"><button class="brand" data-action="home"><span class="mark">∿</span><span>better exl<small>THE LAB WORKSPACE</small></span></button><button class="new" data-action="new">＋ <span>New experiment</span></button><nav><button data-action="home">⌂ <span>Overview</span></button><button data-action="templates">▦ <span>Experiment templates</span></button><button data-action="import">↥ <span>Import data</span></button></nav><div class="side-label">YOUR EXPERIMENTS</div><div id="projects"></div><div class="side-bottom"><button data-action="help">ⓘ <span>Quick reference</span></button><p>On your computer<small>No account. Your data stays local.</small></p></div></aside><main id="main"><div class="empty">Opening your workspace…</div></main></div><dialog id="dialog"><div id="modal"></div></dialog><div id="toasts" role="status" aria-live="polite"></div><input type="file" id="file-picker" accept=".csv,.tsv,.txt,.xlsx,.json" hidden><div id="print-area"></div><noscript>Enable JavaScript to use Better Exl.</noscript></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-token" content="__API_TOKEN__" />
+    <meta
+      name="description"
+      content="Your local physics lab workspace for measurements, uncertainty, theory and scientific graphs."
+    />
+    <title>Better Exl · Your lab workspace</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%233468e8'/%3E%3Ctext x='9' y='35' font-size='36' fill='white'%3E∿%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/vendor/plotly.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <button class="brand" data-action="home">
+          <span class="mark">∿</span
+          ><span>better exl<small>THE LAB WORKSPACE</small></span></button
+        ><button class="new" data-action="new">
+          + <span>New experiment</span>
+        </button>
+        <nav>
+          <button data-action="home">⌂ <span>Overview</span></button
+          ><button data-action="templates">
+            ▦ <span>Experiment templates</span></button
+          ><button data-action="import">↥ <span>Import data</span></button>
+        </nav>
+        <div class="side-label">YOUR EXPERIMENTS</div>
+        <div id="projects"></div>
+        <div class="side-bottom">
+          <button data-action="help">? <span>Quick reference</span></button>
+          <p>
+            On your computer<small>No account. Your data stays local.</small>
+          </p>
+        </div>
+      </aside>
+      <main id="main"><div class="empty">Opening your workspace…</div></main>
+    </div>
+    <dialog id="dialog"><div id="modal"></div></dialog>
+    <div id="toasts" role="status" aria-live="polite"></div>
+    <input
+      type="file"
+      id="file-picker"
+      accept=".csv,.tsv,.txt,.xlsx,.json"
+      hidden
+    />
+    <div id="print-area"></div>
+    <noscript>Enable JavaScript to use Better Exl.</noscript>
+  </body>
+</html>

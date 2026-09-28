@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "better-exl"
+version = "1.0.0"
+description = "A local physics lab workspace for measurement, uncertainty and analysis"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+include = ["better_exl*"]
+
+[tool.setuptools.package-data]
+better_exl = ["static/*"]

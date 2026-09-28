@@ -6,3 +6,9 @@ artifacts/
 *.sqlite*
 node_modules/
 .DS_Store
+
+reproduced-*.json
+reproduced-*.csv
+*.egg-info/
+build/
+dist/
